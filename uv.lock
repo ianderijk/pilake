@@ -40,21 +40,11 @@ wheels = [
 ]
 
 [[package]]
-name = "logger"
-version = "0.2.0"
-source = { registry = "http://192.168.0.29:8080/simple/" }
-sdist = { url = "http://192.168.0.29:8080/packages/logger-0.2.0.tar.gz", hash = "sha256:8c8da9966a04b5be5acec384910521c15ee73c6b8ef275a0565147998cbd2027" }
-wheels = [
-    { url = "http://192.168.0.29:8080/packages/logger-0.2.0-py3-none-any.whl", hash = "sha256:c071750ddad3891fb86e210cce64d82c834eaaaa70f0389464e3827ceddffd6f" },
-]
-
-[[package]]
 name = "pilake"
-version = "0.1.0"
+version = "0.1.94"
 source = { editable = "." }
 dependencies = [
     { name = "boto3" },
-    { name = "logger" },
     { name = "python-dotenv" },
 ]
 
@@ -67,7 +57,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.43.2" },
-    { name = "logger", specifier = ">=0.2.0" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
 ]
 

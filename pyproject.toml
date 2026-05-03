@@ -1,12 +1,11 @@
 [project]
 name = "pilake"
-version = "0.1.0"
+version = "0.1.94"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "boto3>=1.43.2",
-    "logger>=0.2.0",
     "python-dotenv>=1.2.2",
 ]
 
