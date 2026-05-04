@@ -25,7 +25,8 @@ buckets = get_buckets_list()
 
 def bucket_handler(func: Callable):
     def wrapper(**kwargs):
-        bucket_name = kwargs.get("bucket_name", "default_bucket")
+        bucket_name = kwargs.get("bucket_name", "default-bucket")
+        bucket_name = bucket_name.replace("_", "-")
         if bucket_name in buckets:
             return func(**kwargs)
         s3.create_bucket(Bucket=bucket_name)
@@ -58,6 +59,7 @@ def send_to_bucket(
     Returns:
         - None
     """
+    bucket_name = bucket_name.replace("_", "-")
     s3.put_object(
         Bucket=bucket_name,
         Key=f"{bucket_name}/{partition_name}/{filename}{filetype}",

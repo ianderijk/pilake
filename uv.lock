@@ -41,7 +41,7 @@ wheels = [
 
 [[package]]
 name = "pilake"
-version = "0.1.94"
+version = "0.1.96"
 source = { editable = "." }
 dependencies = [
     { name = "boto3" },
