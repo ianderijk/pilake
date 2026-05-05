@@ -14,6 +14,10 @@ s3 = boto3.client(
 
 
 def get_buckets_list() -> list[str]:
+    """
+    Returns a list of all buckets available which is required for checking if a bucket
+    needs creating when sending files.
+    """
     buckets_data = s3.list_buckets()
     buckets = buckets_data["Buckets"]
     buckets_list = [x["Name"] for x in buckets]
@@ -24,6 +28,11 @@ buckets = get_buckets_list()
 
 
 def bucket_handler(func: Callable):
+    """
+    Decorator used to ensure that if a file is being sent to a bucket that doesn't yet
+    exist that the bucket will be created on the fly
+    """
+
     def wrapper(**kwargs):
         bucket_name = kwargs.get("bucket_name", "default-bucket")
         bucket_name = bucket_name.replace("_", "-")
@@ -68,8 +77,33 @@ def send_to_bucket(
     )
 
 
-def list_files(bucket: str, partition: str = "", s3=s3) -> list[str] | None:
-    reponse = s3.list_objects_v2(Bucket=bucket, Prefix=f"{bucket}/{partition}/")
-    if "Contents" not in reponse:
-        return
-    return [x["Key"] for x in reponse["Contents"]]
+def list_files(bucket_name: str, partitions: str | None = None, s3=s3) -> list[str]:
+    """
+    List all files within a bucket and/or partition.
+
+    Args:
+        - bucket_name: The name of the bucket
+        - paritions: The string of the partition(s) being searched. If the partition contains
+        a sub-partition this can be specified as ```partitions="parent/child"```
+        - s3: boto3 client object. Defaults to the package global
+    """
+    prefix = f"{partitions}/" if partitions else ""
+    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+
+    return [x["Key"] for x in response.get("Contents", [])]
+
+
+def read_file(bucket_name: str, key: str, s3=s3) -> bytes:
+    """
+    Reads the content of a file. This function is designed to work with the output of the
+    list_files function also available in the package.
+
+    Args:
+        - bucket_name: The name of the bucket the file belongs to
+        - key: The file key of the file being read. For a file belonging to a partition this
+        will be specified as ```"parition/filename.ext"```
+        - s3: boto3 client object. Defaults to the package global
+    """
+    reponse = s3.get_object(Bucket=bucket_name, Key=key)
+    content = reponse["Body"].read()
+    return content
