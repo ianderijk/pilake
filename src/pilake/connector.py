@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 import boto3
 import os
 from dotenv import load_dotenv
@@ -77,7 +77,13 @@ def send_to_bucket(
     )
 
 
-def list_files(bucket_name: str, partitions: str | None = None, s3=s3) -> list[str]:
+def list_files(
+    bucket_name: str,
+    partitions: str | None = None,
+    *,
+    s3=s3,
+    max_files: Optional[int] = None,
+) -> list[str]:
     """
     List all files within a bucket and/or partition.
 
@@ -86,11 +92,20 @@ def list_files(bucket_name: str, partitions: str | None = None, s3=s3) -> list[s
         - paritions: The string of the partition(s) being searched. If the partition contains
         a sub-partition this can be specified as ```partitions="parent/child"```
         - s3: boto3 client object. Defaults to the package global
+
+    Returns:
+        -
     """
     prefix = f"{partitions}/" if partitions else ""
-    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+    paginator = s3.get_paginator("list_objects_v2")
+    pages = paginator.paginate(Bucket=bucket_name, Prefix=prefix)
+    files = []
+    for page in pages:
+        if max_files and len(files) > max_files:
+            return files[:max_files]
+        files += [file["Key"] for file in page["Contents"]]
 
-    return [x["Key"] for x in response.get("Contents", [])]
+    return files
 
 
 def read_file(bucket_name: str, key: str, s3=s3) -> bytes:
