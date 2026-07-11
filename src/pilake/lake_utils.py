@@ -94,7 +94,7 @@ def list_files(
         - s3: boto3 client object. Defaults to the package global
 
     Returns:
-        -
+        - list of filepaths
     """
     prefix = f"{partitions}/" if partitions else ""
     paginator = s3.get_paginator("list_objects_v2")
