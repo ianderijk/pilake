@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable
 import boto3
 import os
 from dotenv import load_dotenv
@@ -82,7 +82,7 @@ def list_files(
     partitions: str | None = None,
     *,
     s3=s3,
-    max_files: Optional[int] = None,
+    max_files: int | None = None,
 ) -> list[str]:
     """
     List all files within a bucket and/or partition.
