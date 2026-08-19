@@ -64,7 +64,7 @@ def send_to_bucket(
     bytes_: bytes,
     filename: str,
     filetype: str,
-    s3=s3,
+    s3=None,
 ) -> None:
     """
     Send file to a bucket
@@ -80,6 +80,8 @@ def send_to_bucket(
     Returns:
         - None
     """
+    if s3 is None:
+        s3 = get_s3()
     bucket_name = bucket_name.replace("_", "-")
     s3.put_object(
         Bucket=bucket_name,
@@ -93,7 +95,7 @@ def list_files(
     bucket_name: str,
     partitions: str | None = None,
     *,
-    s3=s3,
+    s3=None,
     max_files: int | None = None,
 ) -> list[str]:
     """
@@ -108,6 +110,8 @@ def list_files(
     Returns:
         - list of filepaths
     """
+    if s3 is None:
+        s3 = get_s3()
     prefix = f"{partitions}/" if partitions else ""
     paginator = s3.get_paginator("list_objects_v2")
     pages = paginator.paginate(Bucket=bucket_name, Prefix=prefix)
@@ -120,7 +124,7 @@ def list_files(
     return files
 
 
-def read_file(bucket_name: str, key: str, s3=s3) -> bytes:
+def read_file(bucket_name: str, key: str, s3=None) -> bytes:
     """
     Reads the content of a file. This function is designed to work with the output of the
     list_files function also available in the package.
@@ -131,6 +135,8 @@ def read_file(bucket_name: str, key: str, s3=s3) -> bytes:
         will be specified as ```"parition/filename.ext"```
         - s3: boto3 client object. Defaults to the package global
     """
+    if s3 is None:
+        s3 = get_s3()
     reponse = s3.get_object(Bucket=bucket_name, Key=key)
     content = reponse["Body"].read()
     return content
