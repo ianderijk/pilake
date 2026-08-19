@@ -2,6 +2,8 @@ from typing import Any, Sequence, Mapping
 from dotenv import load_dotenv
 from sqlalchemy import Engine, Row, Table, create_engine, text, insert
 from os import getenv
+from contextvars import ContextVar
+
 
 load_dotenv()
 
@@ -10,7 +12,7 @@ class MissingEnvironmentError(Exception):
     pass
 
 
-_engine = None
+engine: Any = ContextVar("engine", default=None)
 
 
 def _create_engine() -> Engine:
@@ -21,10 +23,9 @@ def _create_engine() -> Engine:
 
 
 def get_engine() -> Engine:
-    global _engine
-    if _engine is None:
-        _engine = _create_engine()
-    return _engine
+    if engine.get() is None:
+        engine.set(_create_engine())
+    return engine.get()
 
 
 def execute_statement(

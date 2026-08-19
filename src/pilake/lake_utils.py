@@ -1,30 +1,40 @@
-from typing import Callable
+from typing import Any, Callable
 import boto3
 import os
+from contextvars import ContextVar
 from dotenv import load_dotenv
 
 load_dotenv()
 
-s3 = boto3.client(
-    "s3",
-    endpoint_url="http://192.168.0.29:9000",
-    aws_access_key_id=str(os.getenv("MINIO_ROOT_USER")),
-    aws_secret_access_key=str(os.getenv("MINIO_PASSWORD")),
-)
+s3: Any = ContextVar("_s3", default=None)
+buckets: Any = ContextVar("_buckets", default=None)
 
 
-def get_buckets_list() -> list[str]:
+def get_s3():
+    if s3.get() is None:
+        s3.set(
+            boto3.client(
+                "s3",
+                endpoint_url="http://192.168.0.29:9000",
+                aws_access_key_id=str(os.getenv("MINIO_ROOT_USER")),
+                aws_secret_access_key=str(os.getenv("MINIO_PASSWORD")),
+            )
+        )
+    return s3
+
+
+def _get_buckets_list() -> list[str]:
     """
     Returns a list of all buckets available which is required for checking if a bucket
     needs creating when sending files.
     """
+    s3 = get_s3()
     buckets_data = s3.list_buckets()
     buckets = buckets_data["Buckets"]
     buckets_list = [x["Name"] for x in buckets]
-    return buckets_list
-
-
-buckets = get_buckets_list()
+    if buckets.get() is None:
+        buckets.set(buckets_list)
+    return buckets
 
 
 def bucket_handler(func: Callable):
@@ -34,6 +44,8 @@ def bucket_handler(func: Callable):
     """
 
     def wrapper(**kwargs):
+        buckets = _get_buckets_list()
+        s3 = get_s3()
         bucket_name = kwargs.get("bucket_name", "default-bucket")
         bucket_name = bucket_name.replace("_", "-")
         if bucket_name in buckets:
